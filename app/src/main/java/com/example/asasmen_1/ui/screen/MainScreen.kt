@@ -1,14 +1,19 @@
 package com.example.asasmen_1.ui.screen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -20,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,8 +37,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,6 +81,7 @@ fun MainScreen(navController: NavHostController) {
     }
 }
 
+@SuppressLint("StringFormatMatches")
 @Composable
 fun ScreenContent(modifier: Modifier) {
     var harga by rememberSaveable { mutableStateOf("") }
@@ -86,8 +95,18 @@ fun ScreenContent(modifier: Modifier) {
         stringResource(id = R.string.offline)
     )
 
-    var hargaDiskon by rememberSaveable { mutableStateOf("") }
+    var jenisBelanja by rememberSaveable { mutableStateOf(radioOptions[0]) }
+
+    var hargaAkhir by rememberSaveable {
+        mutableStateOf(0F)
+    }
+    var jenis by rememberSaveable {
+        mutableStateOf(0)
+    }
+
+//    var hargaDiskon by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
+
     Column (
         modifier = modifier
             .fillMaxSize()
@@ -95,6 +114,10 @@ fun ScreenContent(modifier: Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(text = stringResource(id = R.string.selamat),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth()
+        )
         OutlinedTextField(
             value = harga ,
             onValueChange = {harga = it },
@@ -123,15 +146,31 @@ fun ScreenContent(modifier: Modifier) {
              ),
             modifier = Modifier.fillMaxWidth()
             )
+        Row(
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
+        ) { radioOptions.forEach { text ->
+            chooseBuy(
+                label = text, isSelected = jenisBelanja == text, modifier = Modifier
+                    .selectable(
+                        selected = jenisBelanja == text,
+                        onClick = { jenisBelanja = text },
+                        role = Role.RadioButton
+                    )
+                    .weight(1f)
+                    .padding(16.dp)
+            )
+        }
+        }
         Button(
             onClick = {
                 hargaError = (harga == "" || harga == "0")
                 diskonError = (diskon == "" || diskon == "0")
                 if(hargaError || diskonError) return@Button
-                val hargaFloat = harga.toFloat()
-                val diskonFloat = diskon.toFloat()
-                val hargaDiskonFloat = hargaFloat - (hargaFloat * (diskonFloat/100))
-                hargaDiskon = String.format("%.2f", hargaDiskonFloat)
+                hargaAkhir = rumus(harga.toFloat(), diskon.toFloat())
+                jenis = mendapatJenis(hargaAkhir, jenisBelanja == radioOptions[0])
+
             },
             modifier = Modifier.padding(top = 8.dp),
             contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
@@ -139,17 +178,60 @@ fun ScreenContent(modifier: Modifier) {
             Text(text = stringResource(R.string.hitung))
         }
 
-        if (hargaDiskon.isNotEmpty()){
+        if (hargaAkhir != 0f){
             Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp
             )
-            Text(text = stringResource(R.string.harga_diskon_x, hargaDiskon),
+            Text(text = stringResource(R.string.harga_diskon_x, hargaAkhir),
                 style = MaterialTheme.typography.titleLarge
             )
-
+            Text(text = stringResource(jenis).uppercase(),
+                style = MaterialTheme.typography.headlineLarge
+            )
+            Button(
+                onClick = {
+                    shareData(
+                        context = context,
+                        message = context.getString(R.string.bagikan_template,
+                            harga, diskon, jenisBelanja, hargaAkhir,
+                            context.getString(jenis).uppercase()))
+                },
+                modifier = Modifier.padding(top = 8.dp),
+                contentPadding = PaddingValues(horizontal=32.dp, vertical=16.dp)
+            ) {
+                Text(text = stringResource(R.string.bagikan))
+            }
         }
+    }
+}
 
+private fun mendapatJenis(hargaAkhir: Float, online: Boolean): Int {
+    return if (online) {
+        val hargaAkhirDenganPajak = hargaAkhir * 1.1f
+        hargaAkhirDenganPajak.toInt()
+    } else {
+        hargaAkhir.toInt()
+    }
+}
+
+
+private fun rumus(harga: Float, diskon: Float): Float {
+    return harga - (harga * (diskon/100))
+}
+
+@Composable
+fun chooseBuy(label: String, isSelected: Boolean, modifier: Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = isSelected, onClick = null)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 

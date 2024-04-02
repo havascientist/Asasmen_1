@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">TRINSMART Disc</string>
+    <string name = "bmi_intro"> Mari hitung jumlah harga yang anda dapatkan setelah diskon yang kami berikan! </string>
+    <string name = "harga">harga </string>
+    <string name = "diskon"> diskon </string>
+    <string name = "wanita"> Wanita </string>
+    <string name = "pria"> Pria </string>
+    <string name = "hitung"> Hitung </string>
+    <string name = "bmi_x"> BMI: %1$.2f </string>
+    <string name = "kurus"> Kurus </string>
+    <string name = "ideal"> Ideal </string>
+    <string name = "gemuk"> Gemuk </string>
+    <string name = "input_invalid"> Tidak boleh kosong. </string>
+    <string name="tentang_aplikasi">Tentang Aplikasi</string>
+    <string name="copyright">Hitung BMI merupakan sebuah aplikasi Android untuk menghitung body mass index (BMI) sehingga seseorang dapat mengetahui apakah berat badannya ideal, gemuk atau kurus.\n\nAplikasi ini dibuat untuk kelas Mobpro 1.\n\nCopyright © 2021 – 2024 Indra Azimi.\nAll rights reserved.</string>
+    <string name="kembali">Kembali\n</string>
+    <string name="bagikan">Bagikan</string>
+    <string name="bagikan_template">Berat badan: %1$s kg\nTinggi badan: %2$s cm\nJenis kelamin: %3$s\n\nBMI: %4$.2f\n%5$s</string>
+
+</resources>

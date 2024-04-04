@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TRINSMART DISCOUNTER</string>
+    <string name="updateApp">2024 Discounted Item List</string>
+    <string name="selamat">Let\'s calculate the total price you\'ll get after the discount we provide! Our application is here to help you calculate your discounted shopping price</string>
+    <string name="harga">Price</string>
+    <string name="refresh">refresh</string>
+    <string name="diskon">Discount</string>
+    <string name="hitung">Check Price</string>
+    <string name="harga_diskon_x">Price after discount: Rp %1$s</string>
+    <string name="input_invalid">Cannot be empty</string>
+    <string name="tentang_aplikasi">About the application</string>
+    <string name="deskripsi_aplikasi">The application is created to calculate the total price you get after a discount. This app helps you shop more easily at TRINSMART.</string>
+    <string name="kembali">Back\n</string>
+    <string name="bagikan">Share</string>
+    <string name="bagikan_template">Price: Rp %1$s\nDiscount: %2$s%%\n\nPrice after discount: Rp %3$.2f\n</string>
+    <string name="online">online\n</string>
+    <string name="offline">offline\n</string>
+    <string name="list_kosong">No data yet</string>
+    <string name="x_diklik">%1$s clicked!</string>
+    <string name="tambah_catatan">Add Note</string>
+    <string name="tambah_error">Cannot add note yet.</string>
+</resources>

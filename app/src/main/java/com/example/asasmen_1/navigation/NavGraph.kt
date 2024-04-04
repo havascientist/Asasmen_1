@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.asasmen_1.ui.screen.AboutScreen
 import com.example.asasmen_1.ui.screen.MainScreen
+import com.example.asasmen_1.ui.screen.DescScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -21,6 +22,9 @@ fun SetupNavGraph(navController: NavHostController = rememberNavController()){
         }
         composable(route = Screen.About.route){
             AboutScreen(navController)
+        }
+        composable(route = Screen.Desc.route){
+            DescScreen(navController)
         }
     }
 }

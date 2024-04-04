@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -32,13 +34,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
@@ -50,6 +55,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.asasmen_1.R
 import com.example.asasmen_1.navigation.Screen
 import com.example.asasmen_1.ui.theme.ThemeAsasmen
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.Refresh
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +75,13 @@ fun MainScreen(navController: NavHostController) {
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
+                    IconButton(onClick = { navController.navigate(Screen.Desc.route) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.List,
+                            contentDescription = stringResource(R.string.tentang_aplikasi),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(onClick = { navController.navigate(Screen.About.route) }) {
                         Icon(
                             imageVector = Icons.Outlined.Info,
@@ -73,7 +89,15 @@ fun MainScreen(navController: NavHostController) {
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
+                    IconButton(onClick = { navController.navigate(Screen.Home.route) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = stringResource(R.string.tentang_aplikasi),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
+
             )
         }
     ) { padding ->
@@ -90,23 +114,20 @@ fun ScreenContent(modifier: Modifier) {
     var diskon by rememberSaveable { mutableStateOf("") }
     var diskonError by rememberSaveable { mutableStateOf(false) }
 
+    var fee by remember { mutableIntStateOf(0) }
+
+    var keterangan by rememberSaveable { mutableStateOf("") }
+
     val radioOptions = listOf(
-        stringResource(id = R.string.online),
-        stringResource(id = R.string.offline)
+        stringResource(id = R.string.offline),
+        stringResource(id = R.string.online)
     )
+    val jenisGambar = remember { mutableStateOf(R.drawable.pengiriman) }
+    var jenis by remember { mutableStateOf(radioOptions[0]) }
 
-    var jenisBelanja by rememberSaveable { mutableStateOf(radioOptions[0]) }
+    var hargaDiskon by rememberSaveable { mutableStateOf("") }
 
-    var hargaAkhir by rememberSaveable {
-        mutableStateOf(0F)
-    }
-    var jenis by rememberSaveable {
-        mutableStateOf(0)
-    }
-
-//    var hargaDiskon by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
-
     Column (
         modifier = modifier
             .fillMaxSize()
@@ -131,7 +152,7 @@ fun ScreenContent(modifier: Modifier) {
                 imeAction = ImeAction.Next
             ),
             modifier = Modifier.fillMaxWidth()
-            )
+        )
         OutlinedTextField(
             value = diskon,
             onValueChange = { diskon = it},
@@ -143,34 +164,53 @@ fun ScreenContent(modifier: Modifier) {
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Next
-             ),
+            ),
             modifier = Modifier.fillMaxWidth()
-            )
-        Row(
+        )
+        Row (
             modifier = Modifier
                 .padding(top = 6.dp)
                 .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-        ) { radioOptions.forEach { text ->
-            chooseBuy(
-                label = text, isSelected = jenisBelanja == text, modifier = Modifier
-                    .selectable(
-                        selected = jenisBelanja == text,
-                        onClick = { jenisBelanja = text },
-                        role = Role.RadioButton
-                    )
-                    .weight(1f)
-                    .padding(16.dp)
-            )
+        ){
+            radioOptions.forEach { text ->
+                JenisOption(
+                    label = text,
+                    isSelected = jenis == text,
+                    modifier = Modifier
+                        .selectable(
+                            selected = jenis == text,
+                            onClick = { jenis = text },
+                            role = Role.RadioButton
+                        )
+                        .weight(1f)
+                        .padding(16.dp)
+                )
+            }
         }
-        }
+
         Button(
             onClick = {
                 hargaError = (harga == "" || harga == "0")
                 diskonError = (diskon == "" || diskon == "0")
                 if(hargaError || diskonError) return@Button
-                hargaAkhir = rumus(harga.toFloat(), diskon.toFloat())
-                jenis = mendapatJenis(hargaAkhir, jenisBelanja == radioOptions[0])
 
+                val isOnline = jenis == radioOptions[1]
+
+                fee = getfee(isOnline)
+
+                val hargaFloat = harga.toFloat()
+                val diskonFloat = diskon.toFloat()
+                keterangan = if (isOnline) "Karena anda memesan secara online maka anda terkena pajak 5000" else "Dapatkan promo menarik lainnya dari TRINSMART"
+                val hargaDiskonFloat = (hargaFloat - (hargaFloat * (diskonFloat/100) - fee))
+
+                val imageResId = if (isOnline) {
+                    R.drawable.pengiriman
+                } else {
+                    R.drawable.promo
+                }
+                jenisGambar.value = imageResId
+
+                hargaDiskon = String.format("%.2f", hargaDiskonFloat)
             },
             modifier = Modifier.padding(top = 8.dp),
             contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
@@ -178,24 +218,28 @@ fun ScreenContent(modifier: Modifier) {
             Text(text = stringResource(R.string.hitung))
         }
 
-        if (hargaAkhir != 0f){
+        if (hargaDiskon.isNotEmpty()){
             Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp
             )
-            Text(text = stringResource(R.string.harga_diskon_x, hargaAkhir),
+            Text(text = stringResource(R.string.harga_diskon_x, hargaDiskon),
                 style = MaterialTheme.typography.titleLarge
             )
-            Text(text = stringResource(jenis).uppercase(),
-                style = MaterialTheme.typography.headlineLarge
+            Text(text = "Keterangan: $keterangan")
+
+            Image(
+                painter = painterResource(id = jenisGambar.value),
+                contentDescription = null,
+                modifier = Modifier.size(200.dp)
             )
             Button(
                 onClick = {
                     shareData(
                         context = context,
                         message = context.getString(R.string.bagikan_template,
-                            harga, diskon, jenisBelanja, hargaAkhir,
-                            context.getString(jenis).uppercase()))
+                            harga, diskon, jenis, hargaDiskon,
+                            context.getString(fee).uppercase()))
                 },
                 modifier = Modifier.padding(top = 8.dp),
                 contentPadding = PaddingValues(horizontal=32.dp, vertical=16.dp)
@@ -203,25 +247,22 @@ fun ScreenContent(modifier: Modifier) {
                 Text(text = stringResource(R.string.bagikan))
             }
         }
-    }
-}
+        }
 
-private fun mendapatJenis(hargaAkhir: Float, online: Boolean): Int {
-    return if (online) {
-        val hargaAkhirDenganPajak = hargaAkhir * 1.1f
-        hargaAkhirDenganPajak.toInt()
+    }
+
+
+private fun getfee(isOnline: Boolean): Int {
+    val biayaPesan = if (isOnline) {
+        5000
     } else {
-        hargaAkhir.toInt()
+        0
     }
-}
-
-
-private fun rumus(harga: Float, diskon: Float): Float {
-    return harga - (harga * (diskon/100))
+    return biayaPesan
 }
 
 @Composable
-fun chooseBuy(label: String, isSelected: Boolean, modifier: Modifier) {
+fun JenisOption(label: String, isSelected: Boolean, modifier: Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
@@ -234,7 +275,6 @@ fun chooseBuy(label: String, isSelected: Boolean, modifier: Modifier) {
         )
     }
 }
-
 
 @Composable
 fun IconPicker(isError: Boolean, unit: String) {
@@ -262,7 +302,6 @@ private fun shareData(context: Context, message: String) {
     }
 }
 
-
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
@@ -270,4 +309,22 @@ fun ScreenPreview() {
     ThemeAsasmen {
         MainScreen (rememberNavController())
     }
+}
+
+@Composable
+fun ScrollableLayout(items: List<String>) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(items) { item ->
+            Text(text = item)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ScrollableLayoutPreview() {
+    val items = listOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5")
+    ScrollableLayout(items = items)
 }
